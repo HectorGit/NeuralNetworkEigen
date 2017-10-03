@@ -11,10 +11,12 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
+#include <iostream>
 
 class NeuralNetwork {
 
@@ -24,37 +26,41 @@ public:
 
 private:
 	int numLayers;
-	Eigen::RowVector2i sizes; // is this what I want?
+	std::vector<int> sizes; // is this what I want?
 	float eta;
 
-	Eigen::Matrix2f biasesMatrix;//init random
-	Eigen::Matrix2f weightsMatrix;//init random
-	
-	Eigen::Matrix2f gradient_Ws;
-	Eigen::Matrix2f gradient_Bs;
+	//LEVEL 1
+	Eigen::MatrixXf weightsMatrixL1;//init random
+	Eigen::MatrixXf gradientWsL1;
+	Eigen::MatrixXf biasesMatrixL1;
+	Eigen::MatrixXf gradientBsL1;
+
+	//LEVEL 2
+	Eigen::MatrixXf weightsMatrixL2;//init random
+	Eigen::MatrixXf gradientWsL2;
+	Eigen::MatrixXf biasesMatrixL2;
+	Eigen::MatrixXf gradientBsL2;
 
 	//=================================================================================
-	
-	//***question- what does zip do in python?
-	
-	std::vector<float> feedForward(Eigen::Matrix2f activation);
+		
+	//std::vector<float> feedForward(Eigen::MatrixXf &activation);
 
-	void stochasticGradientDescent(Eigen::Matrix2f trainingData, int epochs, int miniBatchSize, float eta, Eigen::Matrix2f testData);
+	//void stochasticGradientDescent(Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData);
 
-	void updateMiniBatch(Eigen::Matrix2f mini_batch, float eta, Eigen::Matrix2f biasesMatrix, Eigen::Matrix2f weightsMatrix);
+	//void updateMiniBatch(Eigen::MatrixXf &mini_batch, float eta, Eigen::MatrixXf &biasesMatrixL1, Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2);
 
 	/* split this into two methods - will have to repeat some work (no multiple return on c++)*/
 	/*PASSING IN THE GRADIENT MATRICES*/ // ALTHOUGH THEY ARE MEMBERS SO MIGHT NOT NEED TO, BUT FOR CLARITY.
-	void backPropagation(Eigen::Matrix2f x, Eigen::Matrix2f y, Eigen::Matrix2f gradient_Ws, Eigen::Matrix2f gradient_Bs); //input vs labels
-	void backPropagationForWs(Eigen::Matrix2f x, Eigen::Matrix2f y, Eigen::Matrix2f gradient_Ws, Eigen::Matrix2f gradient_Bs));
-	void backPropagationForBs(Eigen::Matrix2f x, Eigen::Matrix2f y, Eigen::Matrix2f gradient_Ws, Eigen::Matrix2f gradient_Bs));
+	//void backPropagation(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2); //input vs labels
+	//void backPropagationForWs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2);
+	//void backPropagationForBs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2);
 
-	Eigen::RowVector2f evaluate(Eigen::Matrix2f testData); //could also just be ONE number ?!
+	//Eigen::RowVectorXf evaluate(Eigen::MatrixXf testData); //could also just be ONE number ?!
 
-	Eigen::RowVector2f cost_derivative(Eigen::Matrix2f outputActivations, Eigen::Matrix2f y);
+	//Eigen::RowVectorXf cost_derivative(Eigen::MatrixXf outputActivations, Eigen::MatrixXf y);
 
-	Eigen::RowVector2f sigmoid_Vectorial(Eigen::Matrix2f z);
+	//Eigen::RowVectorXf sigmoid_Vectorial(Eigen::MatrixXf z);
 
-	Eigen::RowVector2f sigmoid_prime_Vectorial(Eigen::Matrix2f z);
+	//Eigen::RowVectorXf sigmoid_prime_Vectorial(Eigen::MatriXf z);
 
 };			

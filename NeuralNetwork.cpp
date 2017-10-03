@@ -11,23 +11,63 @@
 */
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
+#include <iostream>
 #include "NeuralNetwork.h"
 
 //Constructor
-NeuralNetwork::NeuralNetwork(Eigen::RowVector2i paramSizes)// : sizes = { 2,3,1 };//is this right or sizes({2,3,1})
+NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 {
-	//numLayers = paramSizes.size();
-	//eta = 0;
-	//sizes = paramSizes; //does this work? check by printing.
+	bool debug = true;
+	//printf("what is going on?");
+	numLayers = paramSizes.size();
+	if (debug) { printf("\n numLayers is: %d \n", numLayers); }
 
-	//biasesMatrix.random();
-	//weightsMatrix.random();
-	//gradient_Ws.random();
-	//gradient_Bs.random();
+	eta = 0; 
+	sizes = paramSizes; //NOT SURE IF THIS WORKS //MIGHT NEED TO COPY IT IN SOMEHOW.
+
+	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+
+	if (debug) { printf("\n-------------Initializing NeuralNet--------------\n"); }
+
+	if (debug) { printf("\nLEVEL ONE\n"); }
+
+	weightsMatrixL1 = Eigen::MatrixXf::Random(sizes[0], sizes[1]);
+	if (debug) {printf("\nHere's weightsMatrixL1\n");
+		std::cout << weightsMatrixL1.format(CleanFmt);}
+	gradientWsL1 = Eigen::MatrixXf::Zero(sizes[0], sizes[1]);
+	if (debug) {printf("\nHere's gradientWsL1\n");
+		std::cout << gradientWsL1.format(CleanFmt);}
+
+	biasesMatrixL1 = Eigen::MatrixXf::Random(sizes[1], 1);
+	if (debug) {printf("\nHere's biasesMatrixL1\n");
+		std::cout << biasesMatrixL1.format(CleanFmt);}
+	gradientBsL1 = Eigen::MatrixXf::Zero(sizes[1], 1);
+	if (debug) {printf("\nHere's gradientBsL1\n");
+		std::cout << gradientBsL1.format(CleanFmt);}
+
+	if (debug) { printf("\n\nLEVEL TWO\n"); }
+
+	weightsMatrixL2 = Eigen::MatrixXf::Random(sizes[1], sizes[2]);
+	if (debug) {printf("\nHere's weightsMatrixL2\n");
+		std::cout << weightsMatrixL2.format(CleanFmt);}
+	gradientWsL2 = Eigen::MatrixXf::Zero(sizes[1], sizes[2]);
+	if (debug) {printf("\nHere's gradientWsL2\n");
+		std::cout << gradientWsL2.format(CleanFmt);}
+
+	biasesMatrixL2 = Eigen::MatrixXf::Random(sizes[2], 1);
+	if (debug) {printf("\nHere's biasesMatrixL2\n");
+		std::cout << biasesMatrixL2.format(CleanFmt);}
+	gradientBsL2 = Eigen::MatrixXf::Zero(sizes[2], 1);
+	if (debug) {printf("\nHere's gradientBsL2\n");
+		std::cout << gradientBsL2.format(CleanFmt);}
+
+	if (debug) { printf("\n ---------DONE Initializing NeuralNet--------- \n"); }
+
 }
 
 NeuralNetwork::~NeuralNetwork() 
@@ -50,7 +90,7 @@ NeuralNetwork::~NeuralNetwork()
 }*/
 	
 
-void NeuralNetwork::stochasticGradientDescent(Eigen::Matrix2f trainingData, int epochs, int miniBatchSize, float eta, Eigen::Matrix2f testData)
+/*void NeuralNetwork::stochasticGradientDescent(Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData)
 {
 	//if(testData){ n = len(testData;}
 
@@ -62,15 +102,15 @@ void NeuralNetwork::stochasticGradientDescent(Eigen::Matrix2f trainingData, int 
 			//can be used to access the training Data randomly
 			//even if it it un shuffled.
 		//select mini-batches
-			/*mini_batches = [
-			training_data[k:k+mini_batch_size]
-			for k in xrange(0, n, mini_batch_size)]*/
+			//mini_batches = [
+			//training_data[k:k+mini_batch_size]
+			//for k in xrange(0, n, mini_batch_size)]
 		// for each batch 
 			//updateNetwork(mini_batch, eta) //backpropagation
-}
+}*/
 
 //***Consideration- need to have access to NN :: biasesMatrix and weightMatrix
-void NeuralNetwork::updateMiniBatch(Eigen::Matrix2f mini_batch, float eta, Eigen::Matrix2f biasesMatrix, Eigen::Matrix2f weightsMatrix)
+/*void NeuralNetwork::updateMiniBatch(Eigen::MatrixXf &mini_batch, float eta, Eigen::MatrixXf &biasesMatrixL1, Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2)
 {
 	//create the gradient_W and gradient B matrices (fill w Zeros)
 	//for X, Y in mini batch
@@ -79,39 +119,39 @@ void NeuralNetwork::updateMiniBatch(Eigen::Matrix2f mini_batch, float eta, Eigen
 		//delta_gradient_W = backPropagation(x,y)
 		//delta_gradient_B = backPropagatio(x,y)
 
-		/*  delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-            nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
-            nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]*/
+		    //delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+            //nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
+            //nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
 		
 		//elementwise
 		//gradient_W = gradient_W + delta_gradient_W;
 		//gradient_B = gradient_B + delta_gradient_B;
 		//This changes the gradient matrices from being zero into having values 
 
-	/*self.weights = [w - (eta / len(mini_batch))*nw
-	for w, nw in zip(self.weights, nabla_w)]
-	self.biases = [b - (eta / len(mini_batch))*nb
-	for b, nb in zip(self.biases, nabla_b)]*/
+	//self.weights = [w - (eta / len(mini_batch))*nw
+	//for w, nw in zip(self.weights, nabla_w)]
+	//self.biases = [b - (eta / len(mini_batch))*nb
+	//for b, nb in zip(self.biases, nabla_b)]
 		//This applies the gradients the corresponding matrices.
 
 		//elementwise
 		// weightsMatrices = weightsMatrices - gradientW;
 		// biasesMatrices = biasesMatrices - gradientB;
-}
+}*/
 
 //consideration - pass in the gradient matrices? // BY REFERERNCE !!!! They are members already. - consider removing them as params later
-void NeuralNetwork::backPropagation(Eigen::Matrix2f x, Eigen::Matrix2f y, Eigen::Matrix2f gradient_Ws, Eigen::Matrix2f gradient_Bs)
+/*void NeuralNetwork::backPropagation(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2)
 {
 	backPropagationForWs( x,  y,  gradient_Ws, gradient_Bs);
 	backPropagationForBs( x, y,  gradient_Ws, gradient_Bs);
-}
+}*/
 
-void NeuralNetwork::backPropagationForWs(Eigen::Matrix2f x, Eigen::Matrix2f y, Eigen::Matrix2fgradient_Ws, Eigen::Matrix2f gradient_Bs)
+/*void NeuralNetwork::backPropagationForWs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2)
 {
 	//create the gradient Matrices
 	//gradient_W, gradient_B = zeroes matrices;
 
-	/*-------------FeedForward------------------*/
+	//-------------FeedForward------------------
 	//activation defined in private members? NO !
 	//activation = x; //both vectors - init activation here.
 
@@ -128,7 +168,7 @@ void NeuralNetwork::backPropagationForWs(Eigen::Matrix2f x, Eigen::Matrix2f y, E
 
 			 //->>>end up w - matrix of z's and matrix of activations.
 
-			 /*-------------BackWardsPass------------------*/
+			 //-------------BackWardsPass------------------
 
 			 //START BY get the ERROR (delta) at the last level ([-1]) 
 			 //indexing DOES NOT WORKLIKE THAT ON C++?!!!
@@ -153,15 +193,15 @@ void NeuralNetwork::backPropagationForWs(Eigen::Matrix2f x, Eigen::Matrix2f y, E
 			 //return gradient_B and gradient_W; 
 			 //-> TIP == separate into TWO METHODS (one for B, 
 			 // one for W's)
-}
+}*/
 
-void NeuralNetwork::backPropagationForBs(Eigen::Matrix2f x, Eigen::Matrix2f y, Eigen::Matrix2f gradient_Ws, Eigen::Matrix2f gradient_Bs)
+/*void NeuralNetwork::backPropagationForBs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2)
 {
 			
-}
+}*/
 
 //not sure what is happening here. // COULD also just return one number.
-/*std::vector<float> NeuralNetwork::evaluate(Eigen::Matrix2f testData)
+/*std::vector<float> NeuralNetwork::evaluate(Eigen::MatrixXf testData)
 {
 	//for(x,y) in testData :
 		//testResults = argMax(feedForward(x), y );
@@ -170,18 +210,18 @@ void NeuralNetwork::backPropagationForBs(Eigen::Matrix2f x, Eigen::Matrix2f y, E
 	//return sum( condition x==y for (x,y) in test results).
 }*/
 
-/*std::vector<float> NeuralNetwork::cost_derivative(Eigen::RowVector2f outputActivations, Eigen::RowVector2f y)
+/*std::vector<float> NeuralNetwork::cost_derivative(Eigen::MatrixXf outputActivations, Eigen::MatrixXf y)
 {
 	//how to do this operation Vectorially?
 	//return outputActivations-y;
 }*/
 
-/*std::vector<float> NeuralNetwork::sigmoid_Vectorial(Eigen::RowVector2f z)
+/*std::vector<float> NeuralNetwork::sigmoid_Vectorial(Eigen::MatrixXf z)
 {
 	//return 1.0f/1.0f+np.exp(-z);
 }*/
 
-/*std::vector<float> NeuralNetwork::sigmoid_prime_Vectorial(Eigen::RowVector2f z)
+/*std::vector<float> NeuralNetwork::sigmoid_prime_Vectorial(Eigen::MatriXf z)
 {
 	//return sigmoid(Z)*(1-sigmoid(z));
 }*/
