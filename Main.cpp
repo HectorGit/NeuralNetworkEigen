@@ -19,13 +19,28 @@
 
 int main(){
 
-	/*sample code - instantiate a vector of random numbers and print it
-	Eigen::RowVectorXf v = Eigen::RowVectorXf::Random(1,2);//1st argument always 1
-	std::cout << v.format(CleanFmt);*/
-
 	std::vector<int> paramSizes = { 2,3,2 };
 	NeuralNetwork* aNet = new NeuralNetwork(paramSizes);
-	
+
+	/*
+		UPDATE:
+		
+		DONE: (lack dynamism - might improve on this)
+		1) void feedForward(Eigen::MatrixXf &x);
+		2) int evaluate(Eigen::MatrixXf &activationL2 , Eigen::MatrixXi &y);
+		3) Eigen::MatrixXf costDerivative(Eigen::MatrixXf &outputActivations, Eigen::MatrixXf &y);
+		4) Eigen::MatrixXf sigmoid_Vectorial(Eigen::MatrixXf &z);
+		5) Eigen::MatrixXf sigmoid_Prime_Vectorial(Eigen::MatrixXf &z); 
+
+		PENDING:
+	    stochasticGradientDescent
+		updateMiniBatch
+		backPropagation
+		backPropagationForWs
+		backPropagationForBs
+
+	*/
+
 	/*SGD(training_data, epochs, mini_batch_size, eta,test_data)*/
 	//myNetwork.SGD(trainData, 30, 10, 3.0, testData); //30 epochs, //10 vectors for mini batch, 3.0 error, 
 	return 0;
