@@ -24,7 +24,16 @@ public:
 	NeuralNetwork(std::vector<int> &paramSizes);
 	~NeuralNetwork();
 
-	//make these private again later
+
+private:
+	int numLayers;
+	std::vector<int> sizes; 
+	float eta;
+
+	//GLOBAL - check which ones we need...
+	Eigen::MatrixXf testData;
+	Eigen::MatrixXf validationData;
+	Eigen::MatrixXf trainingData;
 
 	Eigen::MatrixXf activationL1;
 	Eigen::MatrixXf activationL2;
@@ -33,41 +42,28 @@ public:
 	Eigen::MatrixXf y; //includes all the output vectors //or the classification result. e.g. appropriate index
 
 	//LEVEL 1
-	Eigen::MatrixXf weightsMatrixL1;//init random
+	Eigen::MatrixXf weightsMatrixL1;
 	Eigen::MatrixXf gradientWsL1;
 	Eigen::MatrixXf biasesMatrixL1;
 	Eigen::MatrixXf gradientBsL1;
 
 	//LEVEL 2
-	Eigen::MatrixXf weightsMatrixL2;//init random
+	Eigen::MatrixXf weightsMatrixL2;
 	Eigen::MatrixXf gradientWsL2;
 	Eigen::MatrixXf biasesMatrixL2;
 	Eigen::MatrixXf gradientBsL2;
 
-private:
-	int numLayers;
-	std::vector<int> sizes; // is this what I want?
-	float eta;
-
-	//GLOBAL - check which ones we need...
-	Eigen::MatrixXf testData;
-	Eigen::MatrixXf validationData;
-	Eigen::MatrixXf trainingData;
-
-	//make those things private again!!
-
-
 	//=================================================================================
 		
-
 	//void stochasticGradientDescent(Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData);
 	//void updateMiniBatch(Eigen::MatrixXf &mini_batch, float eta, Eigen::MatrixXf &biasesMatrixL1, Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2);
 	//void backPropagation(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2); //input vs labels
 	//void backPropagationForWs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2);
 	//void backPropagationForBs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2);
 
-	void feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL1, Eigen::MatrixXf &activationL2*/);
-	int evaluate(Eigen::MatrixXf &activationL2 /*Eigen::MatrixXf &testData*/, Eigen::MatrixXi &y);
+	//might have to make some of these public permanently?
+	void feedForward(Eigen::MatrixXf &x);
+	int evaluate(Eigen::MatrixXf &activationL2, Eigen::MatrixXi &y);
 	Eigen::MatrixXf costDerivative(Eigen::MatrixXf &outputActivations, Eigen::MatrixXf &y);
 	Eigen::MatrixXf sigmoid_Vectorial(Eigen::MatrixXf &z);
 	Eigen::MatrixXf sigmoid_Prime_Vectorial(Eigen::MatrixXf &z);

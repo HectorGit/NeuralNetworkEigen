@@ -23,7 +23,7 @@
 //Constructor
 NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 {
-	bool debug = true;
+	bool debug = false;
 	//printf("what is going on?");
 	numLayers = paramSizes.size();
 	if (debug) { printf("\n numLayers is: %d \n", numLayers); }
@@ -75,6 +75,116 @@ NeuralNetwork::~NeuralNetwork()
 {
 	//release all memory or something Lolz
 }	
+
+void NeuralNetwork::feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL1, Eigen::MatrixXf &activationL2*/)
+{
+	bool debug = false;
+	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+
+	if (debug) {
+		printf("--------feedforward algorithm------");
+		printf("\n----------LEVEL ONE ---------\n");
+	}
+
+	Eigen::MatrixXf dotProductL1 = weightsMatrixL1.transpose()*x;
+	if (debug) {
+		printf("\n wT dot x \n");
+		std::cout << "\n wT: \n" << weightsMatrixL1.transpose().format(CleanFmt);
+		std::cout << "\n x: \n" << x.format(CleanFmt);
+		std::cout << "\n Result: \n" << dotProductL1.format(CleanFmt);
+	}
+	//---------------------------------------------------------------------------------
+	Eigen::MatrixXf sumL1 = dotProductL1 + biasesMatrixL1;
+	if (debug) {
+		printf("\n + Biases \n");
+		std::cout << "\n b: \n" << biasesMatrixL1.format(CleanFmt);
+		std::cout << "\n Result: \n" << sumL1.format(CleanFmt);
+	}
+	//---------------------------------------------------------------------------------
+	activationL1 = sigmoid_Vectorial(sumL1);
+	if (debug) {
+		printf("\n\n Apply Sigmoid\n");
+		std::cout << "\n Result: \n" << activationL1.format(CleanFmt);
+	}
+
+	if (debug) { printf("\n\n---------LEVEL TWO ----------\n"); }
+
+	Eigen::MatrixXf dotProductL2 = weightsMatrixL2.transpose()*activationL1;
+	if (debug) {
+		printf("\n wT dot activationL1 \n");
+		std::cout << "\n wT: \n" << weightsMatrixL2.transpose().format(CleanFmt);
+		std::cout << "\n activationL1: \n" << activationL1.format(CleanFmt);
+		std::cout << "\n Result: \n" << dotProductL2.format(CleanFmt);
+	}
+	//---------------------------------------------------------------------------------
+	Eigen::MatrixXf sumL2 = dotProductL2 + biasesMatrixL2;
+	if (debug) {
+		printf("\n + Biases \n");
+		std::cout << "\n b: \n" << biasesMatrixL2.format(CleanFmt);
+		std::cout << "\n Result: \n" << sumL2.format(CleanFmt);
+	}
+	//---------------------------------------------------------------------------------
+	activationL2 = sigmoid_Vectorial(sumL2);
+	if (debug) {
+		printf("\n\n Apply Sigmoid\n");
+		std::cout << "\n Result: \n" << activationL2.format(CleanFmt);
+	}
+	if (debug) { printf("\n\n---------DONE----------\n"); }
+
+}
+
+/*Requires FeedForward to be working*/ /*called after an 'epoch' ends*/
+									   /*do we really need testData here??*/
+int NeuralNetwork::evaluate(Eigen::MatrixXf &activationL2/*Eigen::MatrixXf &testData*/, Eigen::MatrixXi &y)
+{
+	bool debug = false;
+
+	int counterOfMatches = 0;
+
+	Eigen::MatrixXi::Index classificationIndex;
+	Eigen::MatrixXf maxVal = Eigen::MatrixXf::Zero(10, 1);
+
+	for (int m = 0; m< activationL2.rows(); m++)
+	{
+		maxVal(m) = activationL2.row(m).maxCoeff(&classificationIndex);
+		if (debug) { printf("\n comparing %d, %d \n", classificationIndex, y(m)); }
+		if (classificationIndex == y(m))
+		{
+			if (debug) { printf("\n match %d, %d \n", classificationIndex, y(m)); }
+			counterOfMatches++;
+		}
+	}
+	return counterOfMatches;
+}
+
+Eigen::MatrixXf NeuralNetwork::costDerivative(Eigen::MatrixXf &outputActivations, Eigen::MatrixXf &y)
+{
+	//should this be in a for loop for every instance that came in?? or is it called multiple times?
+	return outputActivations - y;
+}
+
+Eigen::MatrixXf NeuralNetwork::sigmoid_Vectorial(Eigen::MatrixXf &z)
+{
+	int r = z.rows();
+	int c = z.cols();
+	Eigen::MatrixXf returnedMatrix = Eigen::MatrixXf::Zero(r, c);
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			returnedMatrix.array()(i, j) = 1.0 / (1.0 + exp(-1.0 * z.array()(i, j))); //exp comes from Math.
+		}
+	}
+	return returnedMatrix;
+}
+
+Eigen::MatrixXf NeuralNetwork::sigmoid_Prime_Vectorial(Eigen::MatrixXf &z)
+{
+	int r = z.rows();
+	int c = z.cols();
+	Eigen::MatrixXf sigmoidMatrix = sigmoid_Vectorial(z);
+	Eigen::MatrixXf returnedMatrix = Eigen::MatrixXf::Zero(r, c);
+	returnedMatrix = sigmoidMatrix.array()*(1 - sigmoidMatrix.array());
+	return returnedMatrix;
+}
 
 /*void NeuralNetwork::stochasticGradientDescent(Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData)
 {
@@ -186,100 +296,3 @@ NeuralNetwork::~NeuralNetwork()
 			
 }*/
 
-void NeuralNetwork::feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL1, Eigen::MatrixXf &activationL2*/)
-{ 
-	//how to make this more dynamic???
-
-	bool debug = true;
-	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-
-	if (debug) {printf("--------feedforward algorithm------");
-		printf("\n----------LEVEL ONE ---------\n");}
-
-	Eigen::MatrixXf dotProductL1 = weightsMatrixL1.transpose()*x; 
-	if (debug) { printf("\n wT dot x \n");
-		std::cout << "\n wT: \n" << weightsMatrixL1.transpose().format(CleanFmt) ;
-		std::cout << "\n x: \n" << x.format(CleanFmt);
-		std::cout << "\n Result: \n" << dotProductL1.format(CleanFmt)  ;}
-	//---------------------------------------------------------------------------------
-	Eigen::MatrixXf sumL1 = dotProductL1 + biasesMatrixL1; 
-	if(debug){ printf("\n + Biases \n");
-	std::cout << "\n b: \n" << biasesMatrixL1.format(CleanFmt) ;
-	std::cout << "\n Result: \n" << sumL1.format(CleanFmt) ; }
-	//---------------------------------------------------------------------------------
-	activationL1 = sigmoid_Vectorial(sumL1);
-	if (debug) {printf("\n\n Apply Sigmoid\n");
-		std::cout << "\n Result: \n" << activationL1.format(CleanFmt) ;}
-
-	if (debug) { printf("\n\n---------LEVEL TWO ----------\n"); }
-
-	Eigen::MatrixXf dotProductL2 = weightsMatrixL2.transpose()*activationL1; 
-	if (debug) {printf("\n wT dot activationL1 \n");
-		std::cout << "\n wT: \n" << weightsMatrixL2.transpose().format(CleanFmt);
-		std::cout << "\n activationL1: \n" << activationL1.format(CleanFmt);
-		std::cout << "\n Result: \n" << dotProductL2.format(CleanFmt);}
-	//---------------------------------------------------------------------------------
-	Eigen::MatrixXf sumL2 = dotProductL2 + biasesMatrixL2;
-	if (debug) { printf("\n + Biases \n");
-		std::cout << "\n b: \n" << biasesMatrixL2.format(CleanFmt);
-		std::cout << "\n Result: \n" << sumL2.format(CleanFmt);}
-	//---------------------------------------------------------------------------------
-	activationL2 = sigmoid_Vectorial(sumL2);
-	if (debug) {printf("\n\n Apply Sigmoid\n");
-		std::cout << "\n Result: \n" << activationL2.format(CleanFmt);}
-	if (debug) { printf("\n\n---------DONE----------\n"); }
-
-}
-
-/*Requires FeedForward to be working*/ /*called after an 'epoch' ends*/
-/*do we really need testData here??*/
-int NeuralNetwork::evaluate(Eigen::MatrixXf &activationL2/*Eigen::MatrixXf &testData*/, Eigen::MatrixXi &y)
-{
-	bool debug = false;
-
-	int counterOfMatches = 0; 
-	
-	Eigen::MatrixXi::Index classificationIndex;
-	Eigen::MatrixXf maxVal = Eigen::MatrixXf::Zero(10,1);
-
-	for(int m = 0 ; m< activationL2.rows() ; m++)
-	{
-		maxVal(m) = activationL2.row(m).maxCoeff(&classificationIndex);
-		if (debug) { printf("\n comparing %d, %d \n", classificationIndex, y(m)); }
-		if(classificationIndex == y(m))
-		{
-			if (debug) { printf("\n match %d, %d \n", classificationIndex, y(m)); }
-			counterOfMatches++;
-		}
-	}
-	return counterOfMatches;
-}
-
-Eigen::MatrixXf NeuralNetwork::costDerivative(Eigen::MatrixXf &outputActivations, Eigen::MatrixXf &y)
-{
-	//should this be in a for loop for every instance that came in?? or is it called multiple times?
-	return outputActivations-y;
-}
-
-Eigen::MatrixXf NeuralNetwork::sigmoid_Vectorial(Eigen::MatrixXf &z)
-{
-	int r = z.rows();	
-	int c = z.cols();
-	Eigen::MatrixXf returnedMatrix = Eigen::MatrixXf::Zero(r,c);
-	for (int i = 0; i < r; i++) {
-		for (int j = 0; j < c; j++) {
-			returnedMatrix.array()(i,j) = 1.0 / (1.0 + exp(-1.0 * z.array()(i,j))); //exp comes from Math.
-		}
-	}
-	return returnedMatrix;
-}
-
-Eigen::MatrixXf NeuralNetwork::sigmoid_Prime_Vectorial(Eigen::MatrixXf &z)
-{
-	int r = z.rows();
-	int c = z.cols();
-	Eigen::MatrixXf sigmoidMatrix = sigmoid_Vectorial(z);
-	Eigen::MatrixXf returnedMatrix = Eigen::MatrixXf::Zero(r,c); 
-	returnedMatrix = sigmoidMatrix.array()*(1 - sigmoidMatrix.array());
-	return returnedMatrix;
-}
