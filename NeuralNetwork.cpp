@@ -11,6 +11,7 @@
 */
 
 #include <Eigen/Core>
+#include <Eigen/StdVector>
 #include <Eigen/Dense>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,7 @@
 //Constructor
 NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 {
-	bool debug = false;
+	bool debug = true;
 	//printf("what is going on?");
 	numLayers = paramSizes.size();
 	if (debug) { printf("\n numLayers is: %d \n", numLayers); }
@@ -37,7 +38,7 @@ NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 
 	if (debug) { printf("\nLEVEL ONE\n"); }
 
-	weightsMatrixL1 = Eigen::MatrixXf::Random(sizes[0], sizes[1]);
+	weightsMatrixL1 = Eigen::MatrixXf::Random(sizes[1], sizes[0]); //check this
 	if (debug) {printf("\nHere's weightsMatrixL1\n");
 		std::cout << weightsMatrixL1.format(CleanFmt);}
 	gradientWsL1 = Eigen::MatrixXf::Zero(sizes[0], sizes[1]);
@@ -53,7 +54,7 @@ NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 
 	if (debug) { printf("\n\nLEVEL TWO\n"); }
 
-	weightsMatrixL2 = Eigen::MatrixXf::Random(sizes[1], sizes[2]);
+	weightsMatrixL2 = Eigen::MatrixXf::Random(sizes[2], sizes[1]);
 	if (debug) {printf("\nHere's weightsMatrixL2\n");
 		std::cout << weightsMatrixL2.format(CleanFmt);}
 	gradientWsL2 = Eigen::MatrixXf::Zero(sizes[1], sizes[2]);
@@ -76,9 +77,9 @@ NeuralNetwork::~NeuralNetwork()
 	//release all memory or something Lolz
 }	
 
-void NeuralNetwork::feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL1, Eigen::MatrixXf &activationL2*/)
+void NeuralNetwork::feedForward(Eigen::MatrixXf &x, Eigen::MatrixXf &y)
 {
-	bool debug = false;
+	bool debug = true;
 	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
 
 	if (debug) {
@@ -86,22 +87,22 @@ void NeuralNetwork::feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL
 		printf("\n----------LEVEL ONE ---------\n");
 	}
 
-	Eigen::MatrixXf dotProductL1 = weightsMatrixL1.transpose()*x;
+	Eigen::MatrixXf dotProductL1 = weightsMatrixL1 * x;
 	if (debug) {
 		printf("\n wT dot x \n");
-		std::cout << "\n wT: \n" << weightsMatrixL1.transpose().format(CleanFmt);
+		std::cout << "\n w: \n" << weightsMatrixL1.format(CleanFmt);
 		std::cout << "\n x: \n" << x.format(CleanFmt);
 		std::cout << "\n Result: \n" << dotProductL1.format(CleanFmt);
 	}
 	//---------------------------------------------------------------------------------
-	Eigen::MatrixXf sumL1 = dotProductL1 + biasesMatrixL1;
+	zL1 = dotProductL1 + biasesMatrixL1;
 	if (debug) {
 		printf("\n + Biases \n");
 		std::cout << "\n b: \n" << biasesMatrixL1.format(CleanFmt);
-		std::cout << "\n Result: \n" << sumL1.format(CleanFmt);
+		std::cout << "\n Result: \n" << zL1.format(CleanFmt);
 	}
 	//---------------------------------------------------------------------------------
-	activationL1 = sigmoid_Vectorial(sumL1);
+	activationL1 = sigmoid_Vectorial(zL1);
 	if (debug) {
 		printf("\n\n Apply Sigmoid\n");
 		std::cout << "\n Result: \n" << activationL1.format(CleanFmt);
@@ -109,22 +110,22 @@ void NeuralNetwork::feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL
 
 	if (debug) { printf("\n\n---------LEVEL TWO ----------\n"); }
 
-	Eigen::MatrixXf dotProductL2 = weightsMatrixL2.transpose()*activationL1;
+	Eigen::MatrixXf dotProductL2 = weightsMatrixL2*activationL1;
 	if (debug) {
 		printf("\n wT dot activationL1 \n");
-		std::cout << "\n wT: \n" << weightsMatrixL2.transpose().format(CleanFmt);
+		std::cout << "\n w: \n" << weightsMatrixL2.format(CleanFmt);
 		std::cout << "\n activationL1: \n" << activationL1.format(CleanFmt);
 		std::cout << "\n Result: \n" << dotProductL2.format(CleanFmt);
 	}
 	//---------------------------------------------------------------------------------
-	Eigen::MatrixXf sumL2 = dotProductL2 + biasesMatrixL2;
+	zL2 = dotProductL2 + biasesMatrixL2;
 	if (debug) {
 		printf("\n + Biases \n");
 		std::cout << "\n b: \n" << biasesMatrixL2.format(CleanFmt);
-		std::cout << "\n Result: \n" << sumL2.format(CleanFmt);
+		std::cout << "\n Result: \n" << zL2.format(CleanFmt);
 	}
 	//---------------------------------------------------------------------------------
-	activationL2 = sigmoid_Vectorial(sumL2);
+	activationL2 = sigmoid_Vectorial(zL2);
 	if (debug) {
 		printf("\n\n Apply Sigmoid\n");
 		std::cout << "\n Result: \n" << activationL2.format(CleanFmt);
@@ -137,6 +138,12 @@ void NeuralNetwork::feedForward(Eigen::MatrixXf &x/*Eigen::MatrixXf &activationL
 									   /*do we really need testData here??*/
 int NeuralNetwork::evaluate(Eigen::MatrixXf &activationL2/*Eigen::MatrixXf &testData*/, Eigen::MatrixXi &y)
 {
+	/*
+	in this implementation it just acts as evaluating
+	a single row of outputs w float values versus a int-valued 1D matrix
+	fix when the time comes.
+	*/
+
 	bool debug = false;
 
 	int counterOfMatches = 0;
@@ -213,7 +220,7 @@ Eigen::MatrixXf NeuralNetwork::sigmoid_Prime_Vectorial(Eigen::MatrixXf &z)
 		//unclear if could get both from a single
 		//backPropagation operation !!!
 		//delta_gradient_W = backPropagation(x,y)
-		//delta_gradient_B = backPropagatio(x,y)
+		//delta_gradient_B = backPropagation(x,y)
 
 		    //delta_nabla_b, delta_nabla_w = self.backprop(x, y)
             //nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
@@ -235,64 +242,137 @@ Eigen::MatrixXf NeuralNetwork::sigmoid_Prime_Vectorial(Eigen::MatrixXf &z)
 		// biasesMatrices = biasesMatrices - gradientB;
 }*/
 
-//consideration - pass in the gradient matrices? // BY REFERERNCE !!!! They are members already. - consider removing them as params later
-/*void NeuralNetwork::backPropagation(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2)
-{
-	backPropagationForWs( x,  y,  gradient_Ws, gradient_Bs);
-	backPropagationForBs( x, y,  gradient_Ws, gradient_Bs);
-}*/
+//pass in y?
+void NeuralNetwork::backPropagation(int mini_batch_size)
+{	
+	bool debug = true;
+	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
 
-/*void NeuralNetwork::backPropagationForWs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2)
-{
-	//create the gradient Matrices
-	//gradient_W, gradient_B = zeroes matrices;
+	//vectors didn't want to work... :( only 1-D
+	//should these be class members in NeuralNetwork.h?
+	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_gradientsBs;
+	Eigen::MatrixXf allGradientsBs[10][2]; //nabla_b
+	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_gradientsWs;
+	Eigen::MatrixXf allGradientsWs[10][2]; //nabla_w
+	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_activations;
+	Eigen::MatrixXf allActivations[10][3];
+	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_Zs;
+	Eigen::MatrixXf allZs[10][2];
+	//Eigen::MatrixXf allWeightsMatrices[10][2];
 
-	//-------------FeedForward------------------
-	//activation defined in private members? NO !
-	//activation = x; //both vectors - init activation here.
+	//STEP 1 - 
+	for (int i = 0; i < mini_batch_size; i++) {
+		if (debug){ printf("\n feedforward for all_Xs[%d] \n", i); }
+		feedForward(all_Xs[i], all_Ys[i]); //does this work?
+		
+		allActivations[i][0] = all_Xs[i];
+		allActivations[i][1] = activationL1;
+		allActivations[i][2] = activationL2;
 
-	//activations = [x]; //start to put things into this vector
+		allZs[i][0] = zL1;
+		allZs[i][1] = zL2;
+	}
 
-	//zs = []; // store all the z vectors layer by layer
-			 // one z = wx+b in vector form (all z's for one level)
+	if (debug) {
+		printf("\n starting \n");
+		for (int i = 0; i < mini_batch_size; i++) {
+		
+			printf("\n showing allActivations for single_x # %d \n", i);
+			for (int k = 0; k < numLayers; k++) {
+				Eigen::MatrixXf temp = allActivations[i][k];
+				std::cout << "\n" << temp.format(CleanFmt) << "\n";
+			}
 
-			 // for each bias and weight
-			 //calculate z = w dot activation + b (all are vectors)
-			 //zs.append z;
-			 //calculate the activation_ by sigmoid(z)
-			 //activations append activation
+			printf("\n showing all_Zs for single_x # %d \n", i);
+			for (int j = 0; j < numLayers-1; j++) {
+				Eigen::MatrixXf temp = allZs[i][j];
+				std::cout << "\n" << temp.format(CleanFmt) << "\n";
+			}
+		}
+		printf("\n done \n");
+	}
+	//at this point we have a matrix of z's and matrix of activations.
 
-			 //->>>end up w - matrix of z's and matrix of activations.
+	//-------------BackWardsPass------------------
 
-			 //-------------BackWardsPass------------------
+	//looks like somewhat repetitive code, but didn't know how else to do it.
+	//draw it by hand to check dimensions expected.
 
-			 //START BY get the ERROR (delta) at the last level ([-1]) 
-			 //indexing DOES NOT WORKLIKE THAT ON C++?!!!
+	if (debug) { printf("\n BACKWARDS PROPAGATION \n" ); }
+	
+	//start with populating level 2 by using the error
+	Eigen::MatrixXf delta[10];
+	for (int i = 0; i < mini_batch_size; i++) {
 
-			 // and compute the other errors (partial drvs of. W's and B's)
+		if (debug) {
+			printf("\n allActivations[%d][2] row = %d   col = %d \n", i, allActivations[i][2].rows(), allActivations[i][2].cols());
+			std::cout << all_Ys[i].format(CleanFmt);
+			printf("\n allZs[%d][1] row = %d   col = %d \n", i, allZs[i][1].rows(), allZs[i][1].cols());
+		}
 
-			 // error/delta = cost_derivative(activations[-1]) * sigmoid_prime(zs[-1]); //y-x
+		//SINGLE deltaL2 = (activationL2 - y) times sigmoid zL2 - should have dimensions as BSmatrix 2 by 1
+		delta[i] = (costDerivative(allActivations[i][2], all_Ys[i])).cwiseProduct(sigmoid_Prime_Vectorial(allZs[i][1]));
+	}
+	if (debug) {
+		for (int i = 0; i<mini_batch_size; i++) {
+			printf("\n delta[%d] : \n", i);
+			std::cout << delta[i].format(CleanFmt) << "\n";
+		}
+	}
+	
+	for (int i = 0; i < mini_batch_size; i++) { //also down here 2 is the last level
+		allGradientsBs[i][1] = delta[i]; //cause 2 is the last level.
+		if (debug) { printf("\nallActivations[%d][1].transpose() rows = %d col = %d \n", i, allActivations[i][1].transpose().rows(), allActivations[i][1].transpose().cols()); }
+		allGradientsWs[i][1] = delta[i] * allActivations[i][1].transpose(); 
+	}
 
-			 //HERE WE SEE WE MIGHT SEPARATE BACKPROP INTO A) for B's ---and--- B)  for W's
-			 // gradient_B[-1] = delta;
-			 // gradient_W[-1] = delta dot activations[-2].transpose //previous level activation; 
+	if (debug) {
+		for (int i = 0; i<mini_batch_size; i++) {
+			printf("\n allGradientsBs[%d][1] : \n", i);
+			std::cout << allGradientsBs[i][1].format(CleanFmt) << "\n";
+			printf("\n allGradientsWs[%d][1] : \n", i);
+			std::cout << allGradientsWs[i][1].format(CleanFmt) << "\n";
+		}
+	}
+	
+	//populate level 1 by using the error as well
+	Eigen::MatrixXf deltaL1[10];    
 
-			 //-------Rest of the levels--------//
-			 //REVIEW THIS MATH !!
-			 // for each level after that -
-			 // get its z -> z = z[-L]
-			 // and get its sp = sigmoid_prime(z)
-			 // get delta = ( weightsMatrix[-L + 1].transpose dot delta ) * SP;
-			 // gradient_B[-L] = delta;
-			 // gradient_W[-L] = (delta dot activations[-L-1].transpose);
+	if (debug) {
+		for (int i = 0; i<mini_batch_size; i++) {
+			//this is supposed to require transposition?!
+			printf("\n weightsMatrixL2.transpose() rows = %d cols = %d \n", weightsMatrixL2.transpose().rows(), weightsMatrixL2.transpose().cols());
+			std::cout << deltaL1[i].format(CleanFmt) << "\n";
+			printf("\n delta[%d] \n", i);
+			std::cout << delta[i].format(CleanFmt) << "\n";
+			printf("\n allActivations[%d][0] rows = %d cols = %d \n", i, allActivations[i][0].rows(), allActivations[i][0].cols());
+			std::cout << allActivations[i][0].format(CleanFmt) << "\n";
+		}
+	}
 
-			 //return gradient_B and gradient_W; 
-			 //-> TIP == separate into TWO METHODS (one for B, 
-			 // one for W's)
-}*/
+	for(int i = 0; i < mini_batch_size; i++){  
+	
+		deltaL1[i] = (weightsMatrixL2.transpose() * delta[i]).cwiseProduct(allActivations[i][1]); 
+	}
 
-/*void NeuralNetwork::backPropagationForBs(Eigen::MatrixXf x, Eigen::MatrixXf y, Eigen::MatrixXf &gradientWsL1, Eigen::MatrixXf &gradientBsL1, Eigen::MatrixXf &gradientWsL2, Eigen::MatrixXf &gradientBsL2)
-{
-			
-}*/
+	if (debug) {
+		for (int i = 0; i<mini_batch_size; i++) {
+			printf("\n deltaL1[%d] : \n", i);
+			std::cout << deltaL1[i].format(CleanFmt) << "\n";
+		}
+	}
 
+	for (int i = 0; i < mini_batch_size; i++) { //also down here 2 is the last level
+		allGradientsBs[i][0] = deltaL1[i];
+		allGradientsWs[i][0] = deltaL1[i] * allActivations[i][0].transpose();
+	}
+
+	if (debug) {
+		for (int i = 0; i<mini_batch_size; i++) {
+			printf("\n allGradientsBs[%d][0] rows = %d cols = %d \n", i, allGradientsBs[i][0].rows(), allGradientsBs[i][0].cols());
+			std::cout << allGradientsBs[i][0].format(CleanFmt) << "\n";
+			printf("\n allGradientsWs[%d][0] rows = %d cols = %d \n", i, allGradientsWs[i][0].rows(), allGradientsWs[i][0].cols());
+			std::cout << allGradientsWs[i][0].format(CleanFmt) << "\n";
+		}
+	}
+}
