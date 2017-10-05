@@ -21,15 +21,20 @@
 #include <math.h> //or cmath?
 #include "NeuralNetwork.h"
 
+/*
+NOTES: MAKE IT MORE EXPLICIT WHAT EACH FUNCTION IS TAKING IN AND RETURNING IF YOU CAN?!!
+*/
+
 //Constructor
 NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 {
-	bool debug = true;
+	bool debug = false;
 	//printf("what is going on?");
 	numLayers = paramSizes.size();
+	mini_batch_size = 10;
 	if (debug) { printf("\n numLayers is: %d \n", numLayers); }
 
-	eta = 0; 
+	eta = 3.0; //should pass this in to SGD --> CHECK... DONT SET IT HERE!
 	sizes = paramSizes; //NOT SURE IF THIS WORKS //MIGHT NEED TO COPY IT IN SOMEHOW.
 
 	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -41,7 +46,7 @@ NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 	weightsMatrixL1 = Eigen::MatrixXf::Random(sizes[1], sizes[0]); //check this
 	if (debug) {printf("\nHere's weightsMatrixL1\n");
 		std::cout << weightsMatrixL1.format(CleanFmt);}
-	gradientWsL1 = Eigen::MatrixXf::Zero(sizes[0], sizes[1]);
+	gradientWsL1 = Eigen::MatrixXf::Zero(sizes[1], sizes[0]);
 	if (debug) {printf("\nHere's gradientWsL1\n");
 		std::cout << gradientWsL1.format(CleanFmt);}
 
@@ -57,7 +62,7 @@ NeuralNetwork::NeuralNetwork(std::vector<int> &paramSizes)
 	weightsMatrixL2 = Eigen::MatrixXf::Random(sizes[2], sizes[1]);
 	if (debug) {printf("\nHere's weightsMatrixL2\n");
 		std::cout << weightsMatrixL2.format(CleanFmt);}
-	gradientWsL2 = Eigen::MatrixXf::Zero(sizes[1], sizes[2]);
+	gradientWsL2 = Eigen::MatrixXf::Zero(sizes[2], sizes[1]);
 	if (debug) {printf("\nHere's gradientWsL2\n");
 		std::cout << gradientWsL2.format(CleanFmt);}
 
@@ -79,7 +84,7 @@ NeuralNetwork::~NeuralNetwork()
 
 void NeuralNetwork::feedForward(Eigen::MatrixXf &x, Eigen::MatrixXf &y)
 {
-	bool debug = true;
+	bool debug = false;
 	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
 
 	if (debug) {
@@ -193,72 +198,121 @@ Eigen::MatrixXf NeuralNetwork::sigmoid_Prime_Vectorial(Eigen::MatrixXf &z)
 	return returnedMatrix;
 }
 
-/*void NeuralNetwork::stochasticGradientDescent(Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData)
+void NeuralNetwork::stochasticGradientDescent(/*Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData*/)
 {
-	//if(testData){ n = len(testData;}
+	//if(testData){ n = len(testData);}--- MIGHT NOT NEED THIS!
+	
+	/*ideas make a dummy testing data which has more instances than 
+		mini_batch_size instances. 
+	*/
+	/*
+	implement a for loop to select mini batches OR
+	it looks like we could put this into a for loop 
+	which grabs all_Xs[] from k to k+miniBatchSize.
+	it also grabs corresponding all_Ys[] from k to k_miniBatchSize.
+	it will check if there are still .
 
-	//for every epoch
-		// shuffle the training Data
-			// alternative to random.shuffle
-			// is to have a vector with numbers that
-			// will contain randomized indexes. this vector
-			//can be used to access the training Data randomly
-			//even if it it un shuffled.
-		//select mini-batches
-			//mini_batches = [
-			//training_data[k:k+mini_batch_size]
-			//for k in xrange(0, n, mini_batch_size)]
-		// for each batch 
-			//updateNetwork(mini_batch, eta) //backpropagation
-}*/
+	BE CAREFUL - what to do when there are not enough elements for another batch?
+	*/
 
-//***Consideration- need to have access to NN :: biasesMatrix and weightMatrix
-/*void NeuralNetwork::updateMiniBatch(Eigen::MatrixXf &mini_batch, float eta, Eigen::MatrixXf &biasesMatrixL1, Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2)
+	epochs = 2;
+
+	for (int i = 0; i < epochs; i++) {
+
+		//for each mini_batch in mini_batches
+
+		//dummy data- for now , we will input the exact same data two times.
+		//e.g. the mini batch will be the same for all epochs.
+		printf("\n EPOCH [%d] \n", i);
+		updateMiniBatch();
+
+	}
+}
+
+void NeuralNetwork::updateMiniBatch(/*Eigen::MatrixXf &mini_batch,*/ /*float eta*//*Eigen::MatrixXf &biasesMatrixL1,*/ /*Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2*/)
 {
-	//create the gradient_W and gradient B matrices (fill w Zeros)
-	//for X, Y in mini batch
-		//unclear if could get both from a single
-		//backPropagation operation !!!
-		//delta_gradient_W = backPropagation(x,y)
-		//delta_gradient_B = backPropagation(x,y)
+	/*we have defined the following matrices already*/
+	/*LEVEL 1
+	Eigen::MatrixXf weightsMatrixL1; 3 by 2 filled w current ws
+	Eigen::MatrixXf gradientWsL1;    3 by 2 filled with zeros now
+	Eigen::MatrixXf biasesMatrixL1;  3 by 1 filled w current bs
+	Eigen::MatrixXf gradientBsL1;    3 by 1 filled with zeros now*/
 
-		    //delta_nabla_b, delta_nabla_w = self.backprop(x, y)
-            //nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
-            //nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-		
-		//elementwise
-		//gradient_W = gradient_W + delta_gradient_W;
-		//gradient_B = gradient_B + delta_gradient_B;
-		//This changes the gradient matrices from being zero into having values 
+	/*LEVEL 2
+	Eigen::MatrixXf weightsMatrixL2; 2 by 3  filled w current ws
+	Eigen::MatrixXf gradientWsL2;    2 by 3  filled with zeros now
+	Eigen::MatrixXf biasesMatrixL2;  2 by 1  filled w current bs
+	Eigen::MatrixXf gradientBsL2;    2 by 1  filled with zeros now */
 
-	//self.weights = [w - (eta / len(mini_batch))*nw
-	//for w, nw in zip(self.weights, nabla_w)]
-	//self.biases = [b - (eta / len(mini_batch))*nb
-	//for b, nb in zip(self.biases, nabla_b)]
-		//This applies the gradients the corresponding matrices.
-
-		//elementwise
-		// weightsMatrices = weightsMatrices - gradientW;
-		// biasesMatrices = biasesMatrices - gradientB;
-}*/
-
-//pass in y?
-void NeuralNetwork::backPropagation(int mini_batch_size)
-{	
 	bool debug = true;
 	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
 
-	//vectors didn't want to work... :( only 1-D
-	//should these be class members in NeuralNetwork.h?
-	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_gradientsBs;
+	if (debug) {
+		printf("\n old weights and biases \n");
+		std::cout << "\n weightsMatrixL1 \n" << weightsMatrixL1.format(CleanFmt) << "\n";
+		std::cout << "\n weightsMatrixL2 \n" << weightsMatrixL2.format(CleanFmt) << "\n";
+		std::cout << "\n biasesMatrixL1 \n" << biasesMatrixL1.format(CleanFmt) << "\n";
+		std::cout << "\n biasesMatrixL2 \n" << biasesMatrixL2.format(CleanFmt) << "\n";
+	}
+
+	
+	//need to move what is in main to here for the moment. (DUMMY STUFF)
+	backPropagation(mini_batch_size);
+	
+	//1. accumulate all the gradients.
+	for (int i = 0; i < mini_batch_size; i++) {
+		/*if (debug) {
+			printf("\n gradientWsL1 rows = %d cols = %d \n", gradientWsL1.rows(), gradientWsL1.cols());
+			std::cout << "\n" << gradientWsL1.format(CleanFmt) << "\n";
+
+			printf("\n allGradientsWs[%d][0] rows = %d cols = %d \n", i, allGradientsWs[i][0].rows(), allGradientsWs[i][0].cols());
+			std::cout << "\n" << allGradientsWs[i][0].format(CleanFmt) << "\n";
+		}*/
+
+		gradientWsL1 = gradientWsL1 + allGradientsWs[i][0];
+		gradientWsL2 = gradientWsL2 + allGradientsWs[i][1];
+		gradientBsL1 = gradientBsL1 + allGradientsBs[i][0];
+		gradientBsL2 = gradientBsL2 + allGradientsBs[i][1];
+	}
+
+	
+	//2. get an average (+other operations)
+	printf("\n value of the multiplier for gradient matrices = %4.2f ", eta / (float) mini_batch_size);
+	weightsMatrixL1 = weightsMatrixL1 - ((eta / (float)mini_batch_size) * gradientWsL1); 
+	weightsMatrixL2 = weightsMatrixL2 - ((eta / (float)mini_batch_size) * gradientWsL2);
+	biasesMatrixL1 = biasesMatrixL1 - ((eta / (float)mini_batch_size) * gradientBsL1);
+	biasesMatrixL2 = biasesMatrixL2 - ((eta / (float)mini_batch_size) * gradientBsL2);
+	
+
+	if (debug) {
+		printf("\n new weights and biases \n");
+		std::cout << "\n weightsMatrixL1 \n" << weightsMatrixL1.format(CleanFmt) << "\n";
+		std::cout << "\n weightsMatrixL2 \n" << weightsMatrixL2.format(CleanFmt) << "\n";
+		std::cout << "\n biasesMatrixL1 \n" << biasesMatrixL1.format(CleanFmt) << "\n";
+		std::cout << "\n biasesMatrixL2 \n" << biasesMatrixL2.format(CleanFmt) << "\n";
+	}
+}
+
+//pass in y?
+
+//Need to change/FIX this because
+//Now we want all_Xs and all_Ys to be 
+//Larger than minibatchsize size.
+//USES all_Xs 
+//USES all_Ys
+
+void NeuralNetwork::backPropagation(int mini_batch_size)
+{	
+	bool debug = false;
+	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+
+	/*
+	these became class members.
 	Eigen::MatrixXf allGradientsBs[10][2]; //nabla_b
-	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_gradientsWs;
 	Eigen::MatrixXf allGradientsWs[10][2]; //nabla_w
-	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_activations;
 	Eigen::MatrixXf allActivations[10][3];
-	//std::vector< std::vector< Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf> > all_Zs;
 	Eigen::MatrixXf allZs[10][2];
-	//Eigen::MatrixXf allWeightsMatrices[10][2];
+	*/
 
 	//STEP 1 - 
 	for (int i = 0; i < mini_batch_size; i++) {
