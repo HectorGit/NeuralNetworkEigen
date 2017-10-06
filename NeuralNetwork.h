@@ -26,21 +26,10 @@ public:
 	NeuralNetwork(std::vector<int> &paramSizes);
 	~NeuralNetwork();
 	int mini_batch_size;
-
-	//make private again later?
-	void backPropagation(int mini_batch_size);
-	void updateMiniBatch(/*Eigen::MatrixXf &mini_batch, float eta, Eigen::MatrixXf &biasesMatrixL1, Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2*/);
+	
 	void stochasticGradientDescent(/*Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData*/);
-
-	//make private again later?
 	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> all_Xs;
 	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> all_Ys;
-	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> mini_Batch_Xs;
-	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> mini_Batch_Ys;
-	Eigen::MatrixXf allGradientsBs[10][2]; //nabla_b
-	Eigen::MatrixXf allGradientsWs[10][2]; //nabla_w
-	Eigen::MatrixXf allActivations[10][3];
-	Eigen::MatrixXf allZs[10][2];
 
 private:
 	int epochs;
@@ -58,6 +47,13 @@ private:
 
 	Eigen::MatrixXf x; //includes all the input vectors
 
+	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> mini_Batch_Xs;
+	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> mini_Batch_Ys;
+	Eigen::MatrixXf allGradientsBs[10][2]; //nabla_b
+	Eigen::MatrixXf allGradientsWs[10][2]; //nabla_w
+	Eigen::MatrixXf allActivations[10][3];
+	Eigen::MatrixXf allZs[10][2];
+
 	//LEVEL 1
 	Eigen::MatrixXf weightsMatrixL1;
 	Eigen::MatrixXf gradientWsL1;
@@ -74,8 +70,8 @@ private:
 
 	//=================================================================================
 		
-
-	//might have to make some of these public permanently?
+	void backPropagation(int mini_batch_size);
+	void updateMiniBatch(/*Eigen::MatrixXf &mini_batch, float eta, Eigen::MatrixXf &biasesMatrixL1, Eigen::MatrixXf &weightsMatrixL1, Eigen::MatrixXf &biasesMatrixL2, Eigen::MatrixXf &weightsMatrixL2*/);
 	void feedForward(Eigen::MatrixXf &x, Eigen::MatrixXf &y);
 	int evaluate(Eigen::MatrixXf &activationL2, Eigen::MatrixXi &y);
 	Eigen::MatrixXf costDerivative(Eigen::MatrixXf &outputActivations, Eigen::MatrixXf &y);
