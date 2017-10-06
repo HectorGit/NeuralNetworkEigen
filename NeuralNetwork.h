@@ -35,6 +35,8 @@ public:
 	//make private again later?
 	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> all_Xs;
 	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> all_Ys;
+	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> mini_Batch_Xs;
+	std::vector<Eigen::MatrixXf, Eigen::aligned_allocator<Eigen::MatrixXf>> mini_Batch_Ys;
 	Eigen::MatrixXf allGradientsBs[10][2]; //nabla_b
 	Eigen::MatrixXf allGradientsWs[10][2]; //nabla_w
 	Eigen::MatrixXf allActivations[10][3];

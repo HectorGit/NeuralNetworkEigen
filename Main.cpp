@@ -22,7 +22,7 @@ int main() {
 	std::vector<int> paramSizes = { 2,3,2 };
 	NeuralNetwork* aNet = new NeuralNetwork(paramSizes);
 
-	//dummy stuff
+	//dummy stuff - creating all_Ys and all_Xs that are 5 times the size of mini_batch_size
 	Eigen::MatrixXf yTemp = Eigen::MatrixXf::Zero(2, 1); //10 by 1 just one number - a classification
 	yTemp(0, 0) = 0;
 	yTemp(1, 0) = 1;
@@ -31,7 +31,7 @@ int main() {
 	yTemp(0, 0) = 1;
 	yTemp(1, 0) = 0;
 
-	for (int i = 0; i < aNet->mini_batch_size; i++) {
+	for (int i = 0; i < aNet->mini_batch_size * 5; i++) {
 		Eigen::MatrixXf temp = Eigen::MatrixXf::Random(2, 1);
 		aNet->all_Xs.emplace_back(temp);
 		if (i % 2 == 0) {
@@ -42,8 +42,8 @@ int main() {
 		}
 	}
 
-	/*SGD(training_data, epochs, mini_batch_size, eta,test_data)*/
-	aNet -> stochasticGradientDescent(); //30 epochs, //10 vectors for mini batch, 3.0 error, 
+	printf("calling stochastic gradient descent");
+	aNet->stochasticGradientDescent();
 	return 0;
 }
 

@@ -199,12 +199,7 @@ Eigen::MatrixXf NeuralNetwork::sigmoid_Prime_Vectorial(Eigen::MatrixXf &z)
 }
 
 void NeuralNetwork::stochasticGradientDescent(/*Eigen::MatrixXf &trainingData, int epochs, int miniBatchSize, float eta, Eigen::MatrixXf &testData*/)
-{
-	//if(testData){ n = len(testData);}--- MIGHT NOT NEED THIS!
-	
-	/*ideas make a dummy testing data which has more instances than 
-		mini_batch_size instances. 
-	*/
+{	
 	/*
 	implement a for loop to select mini batches OR
 	it looks like we could put this into a for loop 
@@ -212,18 +207,43 @@ void NeuralNetwork::stochasticGradientDescent(/*Eigen::MatrixXf &trainingData, i
 	it also grabs corresponding all_Ys[] from k to k_miniBatchSize.
 	it will check if there are still .
 
-	BE CAREFUL - what to do when there are not enough elements for another batch?
 	*/
+	bool debug = true;
+	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
 
-	epochs = 2;
+
+	if (debug) { printf("\n stochastic gradient descent was called \n"); }
+
+	int numberOfMiniBatches = all_Xs.size()/mini_batch_size;
+	if (debug) { printf("\n numberofMiniBatches, %d \n", numberOfMiniBatches); }
+	
+	int k = mini_batch_size;
+	epochs = numberOfMiniBatches;
 
 	for (int i = 0; i < epochs; i++) {
 
-		//for each mini_batch in mini_batches
+		//before running for that epoch,
+		//we select the mini batches and put them
+		//in mini_Batch_Xs and mini_Batch_Ys
+		for (int m = i*k; m < (i + 1)*k; m++) {
+			mini_Batch_Xs.emplace_back(all_Xs[m]); 
+			mini_Batch_Ys.emplace_back(all_Ys[m]);
+		}
 
-		//dummy data- for now , we will input the exact same data two times.
-		//e.g. the mini batch will be the same for all epochs.
-		printf("\n EPOCH [%d] \n", i);
+		if (debug) {
+			printf("\n --------MINI BATCH Xs %d -------- \n", i);
+			for (int j = 0; j < k; j++) {
+				std::cout << "\n" << mini_Batch_Xs[j].format(CleanFmt) << "\n";
+				printf("\n");
+			}
+			printf("\n --------MINI BATCH Ys %d -------- \n", i);
+			for (int j = 0; j < k; j++) {
+				std::cout << "\n" << mini_Batch_Ys[j].format(CleanFmt) << "\n";
+				printf("\n");
+			}
+		}
+
+		printf("\n epoch [%d] \n", i);
 		updateMiniBatch();
 
 	}
@@ -246,6 +266,8 @@ void NeuralNetwork::updateMiniBatch(/*Eigen::MatrixXf &mini_batch,*/ /*float eta
 
 	bool debug = true;
 	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+
+	if (debug) { printf("\n update mini batch was called \n"); }
 
 	if (debug) {
 		printf("\n old weights and biases \n");
@@ -293,15 +315,7 @@ void NeuralNetwork::updateMiniBatch(/*Eigen::MatrixXf &mini_batch,*/ /*float eta
 	}
 }
 
-//pass in y?
-
-//Need to change/FIX this because
-//Now we want all_Xs and all_Ys to be 
-//Larger than minibatchsize size.
-//USES all_Xs 
-//USES all_Ys
-
-void NeuralNetwork::backPropagation(int mini_batch_size)
+void NeuralNetwork::backPropagation(int mini_batch_size/*, mini_Batch_Xs, mini_Batch_Ys*/)
 {	
 	bool debug = false;
 	Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -316,10 +330,10 @@ void NeuralNetwork::backPropagation(int mini_batch_size)
 
 	//STEP 1 - 
 	for (int i = 0; i < mini_batch_size; i++) {
-		if (debug){ printf("\n feedforward for all_Xs[%d] \n", i); }
-		feedForward(all_Xs[i], all_Ys[i]); //does this work?
+		if (debug){ printf("\n feedforward for mini_Batch_Xs[%d] \n", i); }
+		feedForward(mini_Batch_Xs[i], mini_Batch_Ys[i]); //does this work?
 		
-		allActivations[i][0] = all_Xs[i];
+		allActivations[i][0] = mini_Batch_Xs[i];
 		allActivations[i][1] = activationL1;
 		allActivations[i][2] = activationL2;
 
@@ -360,12 +374,12 @@ void NeuralNetwork::backPropagation(int mini_batch_size)
 
 		if (debug) {
 			printf("\n allActivations[%d][2] row = %d   col = %d \n", i, allActivations[i][2].rows(), allActivations[i][2].cols());
-			std::cout << all_Ys[i].format(CleanFmt);
+			std::cout << mini_Batch_Ys[i].format(CleanFmt);
 			printf("\n allZs[%d][1] row = %d   col = %d \n", i, allZs[i][1].rows(), allZs[i][1].cols());
 		}
 
 		//SINGLE deltaL2 = (activationL2 - y) times sigmoid zL2 - should have dimensions as BSmatrix 2 by 1
-		delta[i] = (costDerivative(allActivations[i][2], all_Ys[i])).cwiseProduct(sigmoid_Prime_Vectorial(allZs[i][1]));
+		delta[i] = (costDerivative(allActivations[i][2], mini_Batch_Ys[i])).cwiseProduct(sigmoid_Prime_Vectorial(allZs[i][1]));
 	}
 	if (debug) {
 		for (int i = 0; i<mini_batch_size; i++) {
